@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Weather Dashboard</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="container">
+        <section class="weather-app">
+
+            <!-- Header -->
+            <div class="header">
+                <h1>Weather Dashboard</h1>
+                <p>Real-Time Weather Forecast</p>
+            </div>
+
+            <!-- Search -->
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="cityInput"
+                    placeholder="Search city..."
+                    autocomplete="off"
+                >
+                <button id="searchBtn">Search</button>
+            </div>
+
+            <!-- Error and Loading -->
+            <p id="errorMessage" class="error-message"></p>
+            <p id="loadingMessage" class="loading-message"></p>
+
+            <!-- Weather Content -->
+            <div id="weatherContent" class="weather-content hidden">
+
+                <!-- Top -->
+                <div class="top-section">
+                    <div class="city-info">
+                        <h2 id="cityName">Harare</h2>
+                        <p id="countryName" class="country-name"></p>
+                        <p id="weatherDescription">Clear Sky</p>
+                        <p id="lastUpdated" class="last-updated"></p>
+                    </div>
+                    <div id="weatherIcon" class="weather-icon">☀️</div>
+                </div>
+
+                <!-- Temperature -->
+                <div class="temperature-section">
+                    <h1 id="temperature">25°C</h1>
+                    <p id="feelsLike">Feels like 27°C</p>
+                </div>
+
+                <!-- Details Grid -->
+                <div class="details-grid">
+                    <div class="detail-card">
+                        <span class="detail-icon">💧</span>
+                        <h3>Humidity</h3>
+                        <p id="humidity">70%</p>
+                    </div>
+                    <div class="detail-card">
+                        <span class="detail-icon">💨</span>
+                        <h3>Wind Speed</h3>
+                        <p id="windSpeed">36 km/h</p>
+                    </div>
+                    <div class="detail-card">
+                        <span class="detail-icon">🌡️</span>
+                        <h3>Pressure</h3>
+                        <p id="pressure">1012 hPa</p>
+                    </div>
+                    <div class="detail-card">
+                        <span class="detail-icon">👁️</span>
+                        <h3>Visibility</h3>
+                        <p id="visibility">10 km</p>
+                    </div>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div class="forecast-section">
+                    <h3 class="forecast-title">5-Day Forecast</h3>
+                    <div id="forecastCards" class="forecast-cards"></div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
