@@ -4,7 +4,7 @@ A clean, responsive weather app built with vanilla HTML, CSS, and JavaScript. Fe
 
 ## 🔗 Live Demo
 
-> [Add your GitHub Pages link here once deployed]
+> [GitHub Pages link](https://regis-chifambaa.github.io/weather-app/)
 
 ---
 
