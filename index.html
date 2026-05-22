@@ -18,8 +18,19 @@
 
             <!-- Header -->
             <div class="header">
-                <h1>Weather Dashboard</h1>
+                <div class="header-top">
+                    <h1>Weather Dashboard</h1>
+                    <div class="header-controls">
+                        <button id="tempToggle" class="temp-toggle" title="Toggle temperature unit">°F</button>
+                        <button id="geoBtn" class="geo-btn" title="Get weather for my location">📍</button>
+                    </div>
+                </div>
                 <p>Real-Time Weather Forecast</p>
+            </div>
+
+            <!-- Offline Warning -->
+            <div id="offlineBanner" class="offline-banner hidden">
+                ⚠️ No internet connection. Showing cached data from your last search.
             </div>
 
             <!-- Search -->
