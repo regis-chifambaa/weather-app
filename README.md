@@ -44,11 +44,6 @@ A clean, responsive weather app built with vanilla HTML, CSS, and JavaScript. Fe
 
 ### 2. Clone and configure
 
-```bash
-git clone https://github.com/regis-chifambaa/weather-app.git
-cd weather-app
-```
-
 Open `script.js` and replace:
 
 ```javascript
