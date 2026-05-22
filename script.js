@@ -19,6 +19,14 @@ const errorMessage       = document.getElementById("errorMessage");
 const loadingMessage     = document.getElementById("loadingMessage");
 const lastUpdated        = document.getElementById("lastUpdated");
 const forecastCards      = document.getElementById("forecastCards");
+const tempToggle         = document.getElementById("tempToggle");
+const geoBtn             = document.getElementById("geoBtn");
+const offlineBanner      = document.getElementById("offlineBanner");
+
+// STATE
+let isCelsius = true;
+let lastWeatherData = null;
+let lastForecastData = null;
 
 // SEARCH BUTTON EVENT
 searchBtn.addEventListener("click", () => {
@@ -33,6 +41,65 @@ cityInput.addEventListener("keydown", (e) => {
         if (city) fetchWeatherAndForecast(city);
     }
 });
+
+// TEMPERATURE TOGGLE
+tempToggle.addEventListener("click", () => {
+    isCelsius = !isCelsius;
+    tempToggle.textContent = isCelsius ? "°F" : "°C";
+    
+    // Re-display with converted temperatures
+    if (lastWeatherData) {
+        displayWeather(lastWeatherData);
+    }
+    if (lastForecastData) {
+        displayForecast(lastForecastData);
+    }
+});
+
+// GEOLOCATION BUTTON
+geoBtn.addEventListener("click", () => {
+    if (navigator.geolocation) {
+        geoBtn.disabled = true;
+        showLoading();
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const { latitude, longitude } = position.coords;
+                fetchWeatherByCoords(latitude, longitude);
+                geoBtn.disabled = false;
+            },
+            (error) => {
+                showError("📍 Location access denied. Please search manually.");
+                hideLoading();
+                geoBtn.disabled = false;
+            }
+        );
+    } else {
+        showError("Geolocation is not supported by your browser.");
+    }
+});
+
+// OFFLINE DETECTION
+window.addEventListener("offline", () => {
+    const cached = localStorage.getItem("lastWeatherData");
+    if (cached) {
+        offlineBanner.classList.remove("hidden");
+        const data = JSON.parse(cached);
+        displayWeather(data);
+    }
+});
+
+window.addEventListener("online", () => {
+    offlineBanner.classList.add("hidden");
+});
+
+// Check if currently offline
+if (!navigator.onLine) {
+    const cached = localStorage.getItem("lastWeatherData");
+    if (cached) {
+        offlineBanner.classList.remove("hidden");
+    }
+}
 
 // FETCH CURRENT WEATHER + FORECAST
 async function fetchWeatherAndForecast(city) {
@@ -55,8 +122,50 @@ async function fetchWeatherAndForecast(city) {
         displayWeather(currentData);
         displayForecast(forecastData);
 
-        // Save last searched city to localStorage
+        // Save to localStorage
         localStorage.setItem("lastCity", city);
+        localStorage.setItem("lastWeatherData", JSON.stringify(currentData));
+        localStorage.setItem("lastForecastData", JSON.stringify(forecastData));
+
+        offlineBanner.classList.add("hidden");
+
+    } catch (error) {
+
+        showError(error.message);
+
+    } finally {
+
+        hideLoading();
+    }
+}
+
+// FETCH BY COORDINATES (Geolocation)
+async function fetchWeatherByCoords(lat, lon) {
+
+    showLoading();
+
+    try {
+
+        const [currentRes, forecastRes] = await Promise.all([
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`),
+            fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`)
+        ]);
+
+        if (!currentRes.ok) throw new Error("Unable to fetch weather for your location.");
+
+        const currentData  = await currentRes.json();
+        const forecastData = await forecastRes.json();
+
+        displayWeather(currentData);
+        displayForecast(forecastData);
+
+        // Update input and save
+        cityInput.value = currentData.name;
+        localStorage.setItem("lastCity", currentData.name);
+        localStorage.setItem("lastWeatherData", JSON.stringify(currentData));
+        localStorage.setItem("lastForecastData", JSON.stringify(forecastData));
+
+        offlineBanner.classList.add("hidden");
 
     } catch (error) {
 
@@ -73,6 +182,7 @@ function displayWeather(data) {
 
     clearError();
     weatherContent.classList.remove("hidden");
+    lastWeatherData = data;
 
     const { name, sys, main, weather, wind, visibility: vis } = data;
 
@@ -83,9 +193,18 @@ function displayWeather(data) {
     // Description
     weatherDescription.textContent = weather[0].description;
 
-    // Temperature
-    temperature.textContent = `${Math.round(main.temp)}°C`;
-    feelsLike.textContent   = `Feels like ${Math.round(main.feels_like)}°C`;
+    // Temperature (with conversion if needed)
+    let temp = Math.round(main.temp);
+    let feelsTemp = Math.round(main.feels_like);
+    
+    if (!isCelsius) {
+        temp = Math.round((main.temp * 9/5) + 32);
+        feelsTemp = Math.round((main.feels_like * 9/5) + 32);
+    }
+    
+    const unit = isCelsius ? "°C" : "°F";
+    temperature.textContent = `${temp}${unit}`;
+    feelsLike.textContent   = `Feels like ${feelsTemp}${unit}`;
 
     // Details
     humidity.textContent  = `${main.humidity}%`;
@@ -108,6 +227,7 @@ function displayWeather(data) {
 function displayForecast(data) {
 
     forecastCards.innerHTML = "";
+    lastForecastData = data;
 
     // The forecast API returns readings every 3 hours.
     // We pick one reading per day (around midday) for 5 days.
@@ -130,8 +250,17 @@ function displayForecast(data) {
     days.forEach((day, i) => {
         const date      = new Date(day.dt * 1000);
         const dayName   = date.toLocaleDateString("en-GB", { weekday: "short" });
-        const high      = Math.round(day.main.temp_max);
-        const low       = Math.round(day.main.temp_min);
+        
+        // Temperature conversion if needed
+        let high = Math.round(day.main.temp_max);
+        let low  = Math.round(day.main.temp_min);
+        
+        if (!isCelsius) {
+            high = Math.round((day.main.temp_max * 9/5) + 32);
+            low  = Math.round((day.main.temp_min * 9/5) + 32);
+        }
+        
+        const unit      = isCelsius ? "°C" : "°F";
         const condition = day.weather[0].main;
         const icon      = getWeatherIcon(condition);
 
@@ -141,8 +270,8 @@ function displayForecast(data) {
         card.innerHTML = `
             <p class="forecast-day">${dayName}</p>
             <span class="forecast-icon">${icon}</span>
-            <p class="forecast-high">${high}°C</p>
-            <p class="forecast-low">${low}°C</p>
+            <p class="forecast-high">${high}${unit}</p>
+            <p class="forecast-low">${low}${unit}</p>
         `;
 
         forecastCards.appendChild(card);
@@ -175,11 +304,13 @@ function updateWeatherIcon(condition) {
 // UI STATE HELPERS
 function showLoading() {
     loadingMessage.textContent = "Fetching weather data...";
+    loadingMessage.classList.add("active");
     clearError();
 }
 
 function hideLoading() {
     loadingMessage.textContent = "";
+    loadingMessage.classList.remove("active");
 }
 
 function showError(message) {
